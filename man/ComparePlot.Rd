@@ -2,28 +2,42 @@
 % Please edit documentation in R/plotfunctions.R
 \name{ComparePlot}
 \alias{ComparePlot}
-\title{A plot function to compare diferent eefAnalytics S3 objects from the eefAnalytics package.}
+\title{A plot function to compare different eefAnalytics S3 objects from the eefAnalytics package.}
 \usage{
-ComparePlot(eefAnalyticsList, group = NULL, modelNames = NULL)
+ComparePlot(
+  eefAnalyticsList,
+  group = NULL,
+  Conditional = TRUE,
+  ES_Total = TRUE,
+  modelNames = NULL
+)
 }
 \arguments{
 \item{eefAnalyticsList}{A list of eefAnalytics S3 objects from eefAnalytics package.}
 
-\item{group}{a value indicating which intervention to plot.
-This must not be greater than the number of intervention excluding the control group.
+\item{group}{a scalar value indicating which intervention to plot.
+This must not be greater than the number of intervention groups excluding the control group.
 For a two arm trial, the maximum value is 1 and a maximum value of 2 for three arm trial.}
 
-\item{modelNames}{a string factor containing the names of model to compare}
+\item{Conditional}{a logical value to indicate whether to plot conditional effect size.
+The default is Conditional=TRUE, otherwise Conditional=FALSE should be specified for plot based on unconditional effect size.
+ Conditional variance is total or residual variance a multilevel model with fixed effects, whilst unconditional variance is total variance or residual variance from a multilevel model with only intercept as fixed effect.}
+
+\item{ES_Total}{A logical value indicating whether to plot the effect size based on total variance or within school variance.
+The default is ES_Total=TRUE, to plot effect size using total variance.
+ES_Total=FALSE should be specified for effect size based on within school or residuals variance.}
+
+\item{modelNames}{a string factor containing the names of model to compare. See examples below.}
 }
 \value{
-Returns a forest plot to compare the different models
+Returns a bar plot to compare the different methods.
 }
 \description{
-A forest plot comparing the different eefAnalytics results.
+It generates bar plot that compares the effect size from eefAnalytics' methods.
 }
 \details{
-\code{ComparePlot} produces a forest plot which compares the effect size and the associated confidence interval from the different model. 
-For a multilevel model, it shows effect size based on residual variance and total variance.
+\code{ComparePlot} produces a bar plot which compares the effect sizes and the associated confidence intervals from the different models.
+For a multilevel model, it shows the effect size based on residual variance and total variance.
 }
 \examples{
 if(interactive()){
@@ -43,28 +57,26 @@ outputSRTBoot <- srtFREQ(Posttest~ Intervention + Prettest,
 ##### MST #####
 ###############
 
-outputMST <- mstFREQ(Posttest~ Intervention + Prettest, 
+outputMST <- mstFREQ(Posttest~ Intervention + Prettest,
                      random = "School", intervention = "Intervention", data = mstData)
 
-outputMSTBoot <- mstFREQ(Posttest~ Intervention + Prettest, 
-                         random = "School", intervention = "Intervention", 
+outputMSTBoot <- mstFREQ(Posttest~ Intervention + Prettest,
+                         random = "School", intervention = "Intervention",
                          nBoot = 1000, data = mstData)
 
 ##################
 ##### Bayesian #####
 ##################
 
-outputMSTbayes <- mlmBayes(Posttest~ Intervention + Prettest, 
-                           random = "School", intervention = "Intervention",
-                           nSim = 10000, data = mstData)
-
+outputSRTbayes <- srtBayes(Posttest~ Intervention + Prettest,
+                           intervention = "Intervention",
+                           nSim = 2000, data = mstData)
 
 ## comparing different results
 
-ComparePlot(list(outputSRT,outputSRTBoot,outputMST,outputMSTBoot,outputMSTbayes),
-            modelNames =c("ols", "olsBoot","MLM","MLMBoot","MLMBayes"),group=1)
+ComparePlot(list(outputSRT,outputSRTBoot,outputMST,outputMSTBoot,outputSRTbayes),
+            modelNames =c("ols", "olsBoot","MLM","MLMBoot","OLSBayes"),group=1)
 
 
 }
 }
-

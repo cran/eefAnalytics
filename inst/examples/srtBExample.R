@@ -1,13 +1,13 @@
 if(interactive()){
-  
-data(crtData)
+
+data(mstData)
 
 ########################################################
 ## Bayesian analysis of cluster randomised trials     ##
 ########################################################
 
-output <- mlmBayes(Posttest~ Intervention+Prettest,random="School",
-		intervention="Intervention",nSim=10000,data=crtData)
+output <- srtBayes(Posttest~ Intervention+Prettest,
+		intervention="Intervention",nsim=2000,data=mstData)
 
 ### Fixed effects
 beta <- output$Beta

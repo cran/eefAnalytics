@@ -15,26 +15,25 @@ outputSRTBoot <- srtFREQ(Posttest~ Intervention + Prettest,
 ##### MST #####
 ###############
 
-outputMST <- mstFREQ(Posttest~ Intervention + Prettest, 
+outputMST <- mstFREQ(Posttest~ Intervention + Prettest,
                      random = "School", intervention = "Intervention", data = mstData)
 
-outputMSTBoot <- mstFREQ(Posttest~ Intervention + Prettest, 
-                         random = "School", intervention = "Intervention", 
+outputMSTBoot <- mstFREQ(Posttest~ Intervention + Prettest,
+                         random = "School", intervention = "Intervention",
                          nBoot = 1000, data = mstData)
 
 ##################
 ##### Bayesian #####
 ##################
 
-outputMSTbayes <- mlmBayes(Posttest~ Intervention + Prettest, 
-                           random = "School", intervention = "Intervention",
-                           nSim = 10000, data = mstData)
-
+outputSRTbayes <- srtBayes(Posttest~ Intervention + Prettest,
+                           intervention = "Intervention",
+                           nSim = 2000, data = mstData)
 
 ## comparing different results
 
-ComparePlot(list(outputSRT,outputSRTBoot,outputMST,outputMSTBoot,outputMSTbayes),
-            modelNames =c("ols", "olsBoot","MLM","MLMBoot","MLMBayes"),group=1)
+ComparePlot(list(outputSRT,outputSRTBoot,outputMST,outputMSTBoot,outputSRTbayes),
+            modelNames =c("ols", "olsBoot","MLM","MLMBoot","OLSBayes"),group=1)
 
 
 }

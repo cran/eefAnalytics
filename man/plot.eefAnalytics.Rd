@@ -2,16 +2,28 @@
 % Please edit documentation in R/plotfunctions.R
 \name{plot.eefAnalytics}
 \alias{plot.eefAnalytics}
-\title{A plot method for the an eefAnalytics S3 object obtained  from the eefAnalytic package.}
+\title{A plot method for an eefAnalytics S3 object obtained from the eefAnalytics package.}
 \usage{
-\method{plot}{eefAnalytics}(x, group = NULL, ...)
+\method{plot}{eefAnalytics}(x, group = NULL, Conditional = TRUE, ES_Total = TRUE, slop = FALSE, ...)
 }
 \arguments{
 \item{x}{an output object from the eefAnalytics package.}
 
-\item{group}{a value indicating which intervention to plot.
-This must not be greater than the number of intervention excluding the control group.
+\item{group}{a scalar value indicating which intervention to plot.
+This must not be greater than the number of intervention groups excluding the control group.
 For a two arm trial, the maximum value is 1 and a maximum value of 2 for three arm trial.}
+
+\item{Conditional}{a logical value to indicate whether to plot the conditional effect size.
+The default is Conditional=TRUE, otherwise Conditional=FALSE should be specified for plot based on the unconditional effect size.
+ Conditional variance is total or residual variance from a multilevel model with fixed effects, whilst unconditional variance is total variance or residual variance from a multilevel model with only intercept as fixed effect.}
+
+\item{ES_Total}{A logical value indicating whether to plot the effect size based on total variance or within school variance.
+The default is ES_Total=TRUE, to plot the effect size using total variance.
+ES_Total=FALSE should be specified for the effect size based on within school or residuals variance.}
+
+\item{slop}{A logical value indicating whether to return the plot of random intercept (default is slop=FALSE).
+return other school-by-intervention interaction random slope (s) is slop=TRUE.
+This argument is suitable only for mstBayes and mstFREQ functions.}
 
 \item{...}{arguments passed to \code{\link[graphics]{plot.default}}}
 }
@@ -19,18 +31,14 @@ For a two arm trial, the maximum value is 1 and a maximum value of 2 for three a
 Returns relevant plots for each model.
 }
 \description{
-plots different figures based on output from eefAnalytics package.
+Plots different figures based on output from eefAnalytics package.
 }
 \details{
-Plot produces graphical visualisation depending on which model is fitted:
+Plot produces a graphical visualisation depending on which model is fitted:
 \itemize{
-\item For \code{srtFREQ()}, plot can only be used when \code{nBoot} or \code{nPerm} is specified to visualise the distribution of boostrapped or permutated values. 
-\item For \code{crtFREQ()} or \code{mstFREQ}, plot shows the distribution of random intercepts when \code{group=NULL}. 
-It produces histogram of permutated or bootstrapped values when \code{group} is specified and either \code{nBoot} or \code{nPerm} is also specified. 
-\item For \code{mlmBayes()}, plot produces the distrbution of random intercepts when \code{group = NULL}. 
-It produces the probability of effect size to be greater than a pre-specified threshold when group is specified. 
-\item Lastly, plot produces forest plots to compare CACE estimated for different level of compliance when \code{caceSRTBoot()} or 
-\code{caceCRTBoot()} or \code{caceMSTBoot()} is used.
+\item For \code{srtFREQ()}, plot can only be used when \code{nBoot} or \code{nPerm} is specified to visualise the distribution of bootstrapped or permutated values.
+\item For \code{crtFREQ()} or \code{mstFREQ()}, plot shows the distribution of random intercepts when \code{group=NULL}.
+It produces histogram of permutated or bootstrapped values when \code{group} is specified and either \code{nBoot} or \code{nPerm} is also specified.
 }
 }
 \examples{
@@ -64,95 +72,49 @@ plot(outputSRTPerm,group=1)
 
 
 #### Random intercepts
-outputMST <- mstFREQ(Posttest~ Intervention + Prettest, 
+outputMST <- mstFREQ(Posttest~ Intervention + Prettest,
                      random = "School", intervention = "Intervention", data = mstData)
 plot(outputMST)
 
 
 #### Bootstrapped
-outputMSTBoot <- mstFREQ(Posttest~ Intervention + Prettest, 
-                         random = "School", intervention = "Intervention", 
+outputMSTBoot <- mstFREQ(Posttest~ Intervention + Prettest,
+                         random = "School", intervention = "Intervention",
                          nBoot = 1000, data = mstData)
 
 plot(outputMSTBoot)
 plot(outputMSTBoot,group=1)
 
 #### Permutation
-outputMSTPerm <- mstFREQ(Posttest~ Intervention + Prettest, 
+outputMSTPerm <- mstFREQ(Posttest~ Intervention + Prettest,
                          random = "School", intervention = "Intervention",
                          nPerm = 1000, data = mstData)
 plot(outputMSTPerm)
 plot(outputMSTPerm,group=1)
 
 
-####################
-##### Bayesian #####
-####################
-
-
-outputMSTbayes <- mlmBayes(Posttest~ Intervention + Prettest, 
-                           random = "School", intervention = "Intervention",
-                           nSim = 10000, data = mstData)
-
-## Random intercepts
-plot(outputMSTbayes)
-
-## Probability of effect size greater than a precified threshold
-plot(outputMSTbayes,group=1)
 
 ###############
 ##### CRT #####
 ###############
 
 #### Random intercepts
-outputCRT <- crtFREQ(Posttest~ Intervention + Prettest, random = "School", 
+outputCRT <- crtFREQ(Posttest~ Intervention + Prettest, random = "School",
                      intervention = "Intervention", data = crtData)
 plot(outputCRT)
 
 
 ## Bootstrapped
-outputCRTBoot <- crtFREQ(Posttest~ Intervention + Prettest, random = "School", 
+outputCRTBoot <- crtFREQ(Posttest~ Intervention + Prettest, random = "School",
                          intervention = "Intervention", nBoot = 1000, data = crtData)
 
 plot(outputCRTBoot,group=1)
 
 
 ##Permutation
-outputCRTPerm <- crtFREQ(Posttest~ Intervention + Prettest, random = "School", 
+outputCRTPerm <- crtFREQ(Posttest~ Intervention + Prettest, random = "School",
                          intervention = "Intervention", nPerm = 1000, data = crtData)
 
 plot(outputCRTPerm,group=1)
-
-
-## Bayesain
-outputCRTbayes <- mlmBayes(Posttest~ Intervention + Prettest, random = "School", 
-                           intervention = "Intervention", nSim = 10000, data = crtData)
-
-plot(outputCRTbayes,group=1)
-
-
-
-################
-##### CACE #####
-################
-
-outputSRTCace <- caceSRTBoot(Posttest~ Intervention + Prettest,
-                             intervention = "Intervention",compliance="Percentage_Attendance",
-                             nBoot=1000, data = mstData) 
-plot(outputSRTCace)
-
-
-
-outputMSTCace <- caceMSTBoot(Posttest~ Intervention + Prettest,random="School",
-                             intervention = "Intervention",compliance="Percentage_Attendance",
-                             nBoot=1000, data = mstData) 
-plot(outputMSTCace)
-
-
-outputCRTCace <- caceCRTBoot(Posttest~ Intervention + Prettest,random="School",
-                             intervention = "Intervention",compliance="Percentage_Attendance",
-                             nBoot=1000, data = crtData) 
-plot(outputCRTCace)
 }
 }
-
