@@ -6,18 +6,18 @@
 \usage{
 ComparePlot(
   eefAnalyticsList,
-  group = NULL,
+  group,
   Conditional = TRUE,
   ES_Total = TRUE,
-  modelNames = NULL
+  modelNames
 )
 }
 \arguments{
 \item{eefAnalyticsList}{A list of eefAnalytics S3 objects from eefAnalytics package.}
 
-\item{group}{a scalar value indicating which intervention to plot.
-This must not be greater than the number of intervention groups excluding the control group.
-For a two arm trial, the maximum value is 1 and a maximum value of 2 for three arm trial.}
+\item{group}{a string/scalar value indicating which intervention to plot.
+This must be one of the values of intervention variable excluding the control group.
+For a two arm trial, the maximum number of values to consider is 1 and 2 for three arm trial.}
 
 \item{Conditional}{a logical value to indicate whether to plot conditional effect size.
 The default is Conditional=TRUE, otherwise Conditional=FALSE should be specified for plot based on unconditional effect size.

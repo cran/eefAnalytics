@@ -4,17 +4,17 @@
 #'
 #' @export
 #' @param x an output object from the eefAnalytics package.
-#' @param group a scalar value indicating which intervention to plot.
-#' This must not be greater than the number of intervention groups excluding the control group.
-#' For a two arm trial, the maximum value is 1 and a maximum value of 2 for three arm trial.
+#' @param group a string/scalar value indicating which intervention to plot.
+#' This must be one of the values of intervention variable excluding the control group.
+#' For a two arm trial, the maximum number of values to consider is 1 and 2 for three arm trial.
 #' @param Conditional a logical value to indicate whether to plot the conditional effect size.
 #' The default is Conditional=TRUE, otherwise Conditional=FALSE should be specified for plot based on the unconditional effect size.
 #'  Conditional variance is total or residual variance from a multilevel model with fixed effects, whilst unconditional variance is total variance or residual variance from a multilevel model with only intercept as fixed effect.
 #' @param ES_Total A logical value indicating whether to plot the effect size based on total variance or within school variance.
 #' The default is ES_Total=TRUE, to plot the effect size using total variance.
 #' ES_Total=FALSE should be specified for the effect size based on within school or residuals variance.
-#' @param slop A logical value indicating whether to return the plot of random intercept (default is slop=FALSE).
-#' return other school-by-intervention interaction random slope (s) is slop=TRUE.
+#' @param slope A logical value indicating whether to return the plot of random intercept (default is slope=FALSE).
+#' return other school-by-intervention interaction random slope (s) is slope=TRUE.
 #' This argument is suitable only for mstBayes and mstFREQ functions.
 #' @param ... arguments passed to \code{\link[graphics]{plot.default}}
 #' @details Plot produces a graphical visualisation depending on which model is fitted:
@@ -25,8 +25,9 @@
 #' }
 #' @return Returns relevant plots for each model.
 #' @example inst/examples/plotExample.R
-plot.eefAnalytics <- function(x,group=NULL, Conditional=TRUE,ES_Total=TRUE,slop=FALSE,...){
-    plotObject(analyticObject=x,group=group, Conditional=Conditional,ES_Total=ES_Total, compare=FALSE,modelNames=FALSE,...)
+plot.eefAnalytics <- function(x,group, Conditional=TRUE,ES_Total=TRUE,slope=FALSE,...){
+  if(missing(group)){group=NULL}
+    plotObject(analyticObject=x,group=group, Conditional=Conditional,ES_Total=ES_Total,slope=slope, compare=FALSE,modelNames=FALSE,...)
 
 }
 
@@ -38,9 +39,9 @@ plot.eefAnalytics <- function(x,group=NULL, Conditional=TRUE,ES_Total=TRUE,slop=
 #'
 #' @export
 #' @param eefAnalyticsList A list of eefAnalytics S3 objects from eefAnalytics package.
-#' @param group a scalar value indicating which intervention to plot.
-#' This must not be greater than the number of intervention groups excluding the control group.
-#' For a two arm trial, the maximum value is 1 and a maximum value of 2 for three arm trial.
+#' @param group a string/scalar value indicating which intervention to plot.
+#' This must be one of the values of intervention variable excluding the control group.
+#' For a two arm trial, the maximum number of values to consider is 1 and 2 for three arm trial.
 #' @param Conditional  a logical value to indicate whether to plot conditional effect size.
 #' The default is Conditional=TRUE, otherwise Conditional=FALSE should be specified for plot based on unconditional effect size.
 #'  Conditional variance is total or residual variance a multilevel model with fixed effects, whilst unconditional variance is total variance or residual variance from a multilevel model with only intercept as fixed effect.
@@ -53,13 +54,13 @@ plot.eefAnalytics <- function(x,group=NULL, Conditional=TRUE,ES_Total=TRUE,slop=
 #'
 #' @return Returns a bar plot to compare the different methods.
 #' @example inst/examples/compareExample.R
-ComparePlot <- function(eefAnalyticsList,group=NULL, Conditional=TRUE,ES_Total=TRUE,modelNames=NULL){
-  if(class(eefAnalyticsList)!="list"){stop("eefAnalyticsList is not a list.")}
+ComparePlot <- function(eefAnalyticsList,group, Conditional=TRUE,ES_Total=TRUE,modelNames){
+  if(!is(eefAnalyticsList,"list")){stop("eefAnalyticsList is not a list.")}
 
-  if(!all(unlist(lapply(eefAnalyticsList,FUN=class))=="eefAnalytics")){stop("Not all list objects are a eefAnalytics class object.")}
+  if(!all(unlist(lapply(eefAnalyticsList,function(x) is(x,"eefAnalytics"))))){stop("Not all list objects are a eefAnalytics class object.")}
 
-  if(is.null(modelNames)){stop("modelNames must be specified.")}
-  if(is.null(group)){stop("group must be specified.")}
+  if(missing(modelNames)){stop("modelNames must be specified.")}
+  if(missing(group)){stop("group must be specified.")}
 
   plotObject(analyticObject=eefAnalyticsList,group=group, Conditional=Conditional,ES_Total=ES_Total, compare=TRUE,modelNames=modelNames)
 
@@ -68,10 +69,12 @@ ComparePlot <- function(eefAnalyticsList,group=NULL, Conditional=TRUE,ES_Total=T
 
 
 
+##################################
+#      Internal plot function    #
+##################################
 
-# Internal plot function
 
-plotObject <- function(analyticObject,group=NULL, Conditional=TRUE,ES_Total=TRUE,slop=FALSE, compare=FALSE,modelNames=FALSE,...){
+plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare,modelNames,...){
 
   if(Conditional ==TRUE){analyticObject2=analyticObject; Condname="Conditional"}
   if(Conditional ==FALSE){analyticObject2=analyticObject$Unconditional; Condname="Unconditional"}
@@ -79,57 +82,80 @@ plotObject <- function(analyticObject,group=NULL, Conditional=TRUE,ES_Total=TRUE
   if(ES_Total ==FALSE){ES_TW<-"Within"}
 
   if(compare==TRUE & !is.null(names(analyticObject))){stop("Specify the list of objects to compare")}
+  if(!is.null(group)){
+  trtname <-rownames(analyticObject2$ES)
+  if(is.null(trtname)){trtname <-names(analyticObject2$ES)}
+  trtpos <-substr(trtname, (nchar(trtname)-nchar(group)+1),  nchar(trtname))==group
+  trt <- trtname[trtpos]
+  }
+  #bootstrap, permutation and Pprobability plot for SRT model
+  #---------------------------------------------------------
+  if(sum(analyticObject$Method=="LM") ==1) {
+    if(is.null(group)){stop("Group must be specified.")}
+    if(!is.null(group)& sum(names(analyticObject)=="ProbES")== 0){
+      if(sum(names(analyticObject)=="Bootstrap"|
+             names(analyticObject)=="permES")==0){stop("Only relevant for bootstrapped or permutated values")}
+      if(sum(names(analyticObject)=="Bootstrap")==1){
+        ntp <- nrow(as.matrix(analyticObject$ES))
+        if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
 
-  if(sum(analyticObject$Method=="LM")==1){
-    if(sum(names(analyticObject)=="Bootstrap"|names(analyticObject)=="permES")==0){stop("Only relevant for bootstrapped or permutated values")}
-    if(sum(names(analyticObject)=="Bootstrap")==1){
-      ntp <- nrow(as.matrix(analyticObject$ES))
+        obs.est <- analyticObject2$ES[trt,1]
+        tmp2 <- as.numeric(analyticObject2$Bootstrap[,trt])
+        xlabs=paste0(Condname," Bootstrap estimates")
+        hist(tmp2,breaks=30,col="white",border="cornflowerblue",xlab=xlabs,main="")
+        abline(v=obs.est,col="red",lwd=2,lty=1)
+        abline(v=0,col="grey48",lwd=2,lty=1)
+        legend("topright",c("Observed Estimate","Zero-Line"),col=c("red","grey48"),bty="n",lty=1,lwd=2)
+      }
 
-      if(is.null(group)){stop("Group number must be defined")}
-      if(group > ntp){stop("Group number must be less than the number of intervention")}
-      obs.est <- analyticObject2$ES[group,1]
-      tmp2 <- as.numeric(analyticObject2$Bootstrap[,group])
-      xlabs=paste0(Condname," Bootstrap estimates")
-      hist(tmp2,breaks=30,col="white",border="cornflowerblue",xlab=xlabs,main="")
-      abline(v=obs.est,col="red",lwd=2,lty=1)
-      abline(v=0,col="grey48",lwd=2,lty=1)
-      legend("topright",c("Observed Estimate","Zero-Line"),col=c("red","grey48"),bty="n",lty=1,lwd=2)
+      if(sum(names(analyticObject2)=="permES")==1){
+        ntp <- nrow(as.matrix(analyticObject2$ES))
+        if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
+
+
+        Perm.names <-names(analyticObject2$permES)
+
+        obs.est <- analyticObject2$ES[trt,1]
+        tmp2 <- as.numeric(analyticObject2$permES[,trt])
+        pvalue <- round(mean(abs(tmp2)> abs(obs.est)),3)
+        xlabs=paste0("Permutation values (PermES) based on ",Condname, " ES")
+
+        hist(tmp2,breaks=30,col="white",border="cornflowerblue",xlab=xlabs,main=paste("P(|PermES| > |ES|)=",pvalue,sep=""))
+        abline(v=obs.est,col="red",lwd=2,lty=2)
+        abline(v=-obs.est,col="red",lwd=2,lty=2)
+        legend("topright",c("(-) Observed Estimate"),col=c("red"),bty="n",lty=2,lwd=2)
+      }
     }
+    if(sum(names(analyticObject)=="ProbES")> 0 ){
+      if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
+      tmp2 <- analyticObject2$ProbES[[which(trtpos==TRUE)]]
 
-    if(sum(names(analyticObject)=="permES")==1){
-      ntp <- nrow(as.matrix(analyticObject$ES))
-      if(is.null(group)){stop("Group number must be defined")}
-      if(group > ntp){stop("Group number must be less than the number of intervention")}
+      thd0<- regmatches(rownames(tmp2),  gregexpr("[[:digit:]]+\\.*[[:digit:]]*",rownames(tmp2)))
+      thd <- as.numeric(unlist(thd0))
 
-
-      Perm.names <-names(analyticObject2$permES)
-
-      obs.est <- analyticObject2$ES[group,1]
-      tmp2 <- as.numeric(analyticObject2$permES[,group])
-      pvalue <- round(mean(abs(tmp2)> abs(obs.est)),3)
-      xlabs=paste0("Permutation values (PermES) based on ",Condname, " ES")
-
-      hist(tmp2,breaks=30,col="white",border="cornflowerblue",xlab=xlabs,main=paste("P(|PermES| > |ES|)=",pvalue,sep=""))
-      abline(v=obs.est,col="red",lwd=2,lty=2)
-      abline(v=-obs.est,col="red",lwd=2,lty=2)
-      legend("topright",c("(-) Observed Estimate"),col=c("red"),bty="n",lty=2,lwd=2)
+      par_original <- par()[c("mar","xpd")]
+      par_original0<- par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+      plot(thd, tmp2[,1], col="blue", type="b",ylim=c(0,max(tmp2)), xlab=expression("Effect size" >= "Threshold"), ylab="Posterior probability")
+      on.exit(par(par_original0))
+      on.exit(par(par_original))
     }
-
 
   }
 
 
+  #bootstrap, permutation, and Pprobability plot for CRT and MST model
+  #--------------------------------------------------------------------
   if(sum(analyticObject$Method=="MLM")==1){
 
     if(is.null(group)){
 
-      tmp000  <- data.frame(analyticObject$SchEffects)
-      if(slop==FALSE){
+      tmp000  <- data.frame(analyticObject2$SchEffects)
+      if(slope==FALSE){
         tmp00 <- tmp000[,grep("Schools|Intercept|Estimate",names(tmp000))]
         mar11 <-  c(5, 4, 4, 2) + 0.1
       }
-      if(slop==TRUE & dim(tmp000)[2] ==2){stop("x must be mstFREQ or mstBAyes object")}
-      if(slop==TRUE & dim(tmp000)[2] >2){
+      if(slope==TRUE & dim(tmp000)[2] ==2){stop("x must be mstFREQ or mstBAyes object")}
+      if(slope==TRUE & dim(tmp000)[2] >2){
         tmp00 <- tmp000[,!(names(tmp000) %in% "Intercept")]
         if(dim(tmp00)[2]==2){mar11 <- c(5, 4, 4, 2) + 0.1}
         if(dim(tmp00)[2]==3){mar11 <- c(5, 2, 4, 0) + 1.0}
@@ -150,15 +176,15 @@ plotObject <- function(analyticObject,group=NULL, Conditional=TRUE,ES_Total=TRUE
       lines1=-2.5
       if(dim(tmp00)[2] >3){lines1=-1}
       title(xlab="School labels", outer = TRUE, line = lines1,cex.lab = 1.2)
-      par(op)
+      on.exit(par(op))
     }
 
     if( !is.null(group) & sum(names(analyticObject)=="Bootstrap")>0){
-      ntp <- length(analyticObject$ES)
-      if(group > ntp){stop("Group number must be less than the number of intervention")}
+      ntp <- length(analyticObject2$ES)
+      if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
       Boot.names <-names(analyticObject2$Bootstrap)
-      obs.est <- analyticObject2$ES[[group]][ES_TW,1]
-      tmp2 <- as.numeric(analyticObject2$Bootstrap[,grep(ES_TW, Boot.names, ignore.case = T)[group]])
+      obs.est <- analyticObject2$ES[[trt]][ES_TW,1]
+      tmp2 <- as.numeric(analyticObject2$Bootstrap[,grep(ES_TW,grep(trt,Boot.names, ignore.case = T, value = T))])
       pvalue <- round(mean(abs(tmp2)> abs(obs.est)),3)
       xlabs=paste0("Bootstrap estimates for ",Condname, " ES_",ES_TW)
       hist(tmp2,breaks=30,col="white",border="cornflowerblue",xlab=xlabs,main="")
@@ -170,100 +196,91 @@ plotObject <- function(analyticObject,group=NULL, Conditional=TRUE,ES_Total=TRUE
 
     if( !is.null(group) & sum(names(analyticObject)=="permES")>0){
       ntp <- ifelse(is.list(analyticObject$ES),length(analyticObject$ES),1)
-      if(group > ntp){stop("Group number must be less than the number of intervention")}
+      if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
       Perm.names <-names(analyticObject2$permES)
-      obs.est <- analyticObject2$ES[[group]][ES_TW,1]
-      tmp2 <- as.numeric(analyticObject2$permES[,grep(ES_TW, Perm.names, ignore.case = T)[group]])
+      obs.est <- analyticObject2$ES[[trt]][ES_TW,1]
+      tmp2 <- as.numeric(analyticObject2$permES[,grep(ES_TW,grep(trt,Perm.names, ignore.case = T, value = T))])
       pvalue <- round(mean(abs(tmp2)> abs(obs.est)),3)
       xlabs=paste0("Permutation values(PermES) based on ",Condname, " ES_",ES_TW)
       hist(tmp2,breaks=30,col="white",border="cornflowerblue",xlab=xlabs,main=paste("P(|PermES| > |ES|)=",pvalue,sep=""))
       abline(v=obs.est,col="red",lwd=2,lty=2)
       abline(v=-obs.est,col="red",lwd=2,lty=2)
-      legend("topright",c("(-) Observed Estimate"),col=c("red"),bty="n",lty=2,lwd=2)
+      legend("topright",c("Observed Estimate"),col=c("red"),bty="n",lty=2,lwd=2)
     }
 
 
     if( !is.null(group) &sum(names(analyticObject)=="ProbES")> 0 ){
-      ntp <- length(analyticObject$ES)
-      nmax <- group*3
-      nmin <- nmax -2
-      tmp <- analyticObject$ProbES[,-1]
-      nntmp <- ncol(tmp)/3
-      if(group > nntmp){stop("Group number must be less than the number of intervention")}
-      es <- analyticObject$ProbES[,1]
-      tmp2 <- tmp[,c(nmin:nmax)]
+
+      if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
+      tmp2 <- analyticObject2$ProbES[[which(trtpos==TRUE)]]
+      tmp2.within<- tmp2[, grep("with",names(tmp2), ignore.case = TRUE)]
+      tmp2.total <- tmp2[, grep("total",names(tmp2), ignore.case = TRUE)]
+      thd0<- regmatches(rownames(tmp2),  gregexpr("[[:digit:]]+\\.*[[:digit:]]*",rownames(tmp2)))
+      thd <- as.numeric(unlist(thd0))
 
       par_original <- par()[c("mar","xpd")]
+      op<- par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+      plot(thd, tmp2.within, col="blue", type="b",ylim=c(0,max(tmp2)), xlab=expression("Effect size" >= "Threshold"), ylab="Posterior probability",...)
+      lines(thd, tmp2.total, col="red", type="b", lty=2)
+      legend("topright", legend=c("within", "total"), col=c("blue", "red"), lty=1:2, cex=0.8)
+      on.exit(par(op))
+      on.exit(par(par_original))
 
-      par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
-      plot(es,tmp2[,1],ylim=c(0,max(tmp2)),ylab="Probability",cex.lab=1,cex.axis=1,type="n", xlab=expression("Effect size" >= "x"),cex=1,...)
-      lines(es,tmp2[,1],col="chartreuse3",cex=1.5,lwd=1.5,lty=2)
-      lines(es,tmp2[,2],col="violetred",cex=1.5,lwd=1.5,lty=3)
-      lines(es,tmp2[,3],col="cornflowerblue",cex=1.5,lwd=1.5,lty=1)
-      points(es,tmp2[,1],col="chartreuse3",cex=1.5,lwd=1.5,pch=7)
-      points(es,tmp2[,2],col="violetred",cex=1.5,lwd=1.5,pch=1)
-      points(es,tmp2[,3],col="cornflowerblue",cex=1.5,lwd=1.5,pch=12)
-      legend("topright",inset=c(-.2,0) ,legend=c("Within ","Between ","Total "),bty="n",lty=c(2,3,1), cex=.8,
-             pch=c(7,1,12),col=c("chartreuse3","violetred","cornflowerblue"),title="Variance")
-
-      par(par_original)
     }
 
   }
 
+  # error bar for model comparing models
+  #-------------------------------------
   if(is.null(names(analyticObject))){
 
     ltp <- names(analyticObject)
     if(!is.null(ltp)){stop("Specify list of eefAnalytics objects for comparison")}
+    if(is.null(group)){stop("Group number must be defined")}
     ntp <- length(analyticObject)
     if(length(modelNames)!= ntp){stop("Names must be equal to the number of eefAnalytics objects")}
+
     es.mean <- es.lower <- es.upper <- p.name <- var.name <- NULL
     for(k in 1:ntp){
       tmp <- analyticObject[[k]]
 
       if(tmp$Method=="LM"){
+        trtname <-rownames(tmp$ES)
+        trtpos <-substr(trtname, (nchar(trtname)-nchar(group)+1),  nchar(trtname))==group
+        trt <- trtname[trtpos]
 
-        tmp2 <- as.matrix(tmp$ES)
-        if(is.null(group)){stop("Group number must be defined")}
-        if(group > nrow(tmp2 )){stop("Group number must be less than the number of intervention")}
-        es.mean1 <-tmp2[group,1]
-        es.lower1 <-tmp2[group,2]
-        es.upper1 <-tmp2[group,3]
+        if(Conditional==TRUE){tmp2 <- as.matrix(tmp$ES)}
+        if(Conditional==FALSE){tmp2 <- as.matrix(tmp$Unconditional$ES)}
+        trtname <-rownames(tmp$ES)
+        if(is.null(trtname)){trtname <-names(tmp$ES)}
+        trtpos <-substr(trtname, (nchar(trtname)-nchar(group)+1),  nchar(trtname))==group
+        trt <- trtname[trtpos]
+        if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
+        es.mean1 <-tmp2[trt,1]
+        es.lower1 <-tmp2[trt,2]
+        es.upper1 <-tmp2[trt,3]
         p.name1 <- rep(modelNames[k],length(es.mean1))
         var.name1 <- rep("Within",length(es.mean1))
 
       }
 
       if(tmp$Method=="MLM"){
-        nlist <- 1
-        if(is.null(group)){stop("Group number must be defined")}
-        if(group > length(tmp$ES)){stop("Group number must be less than the number of intervention")}
-        tmp2 <- unlist(tmp$ES[[group]])
-        estmp <-c(sapply(c(1:nlist),function(x)c(6*(x-1)+1,6*(x-1)+2)))
-        lbtmp <-c(sapply(c(1:nlist),function(x)c(6*(x-1)+3,6*(x-1)+4)))
-        ubtmp <-c(sapply(c(1:nlist),function(x)c(6*(x-1)+5,6*(x-1)+6)))
-        es.mean1 <- tmp2[estmp]
-        es.lower1 <-tmp2[lbtmp]
-        es.upper1 <-tmp2[ubtmp]
-        p.name1 <- rep(modelNames[k],length(es.mean1))
-        var.name1 <- rep(c("Within","Total"),nlist)
-
-      }
-
-
-      if(tmp$Method=="MLM"&sum(names(tmp)=="ProbES")==1){
-        if(is.null(group)){stop("Group number must be defined")}
-        if(group > length(tmp$ES)){stop("Group number must be less than the number of intervention")}
-        tmp0 <- unlist(tmp$ES)
-        if(length(tmp0)>9){tmp2 <- as.matrix(tmp$ES[[group]][-2,])}
-        if(!length(tmp0)>9){tmp2 <- as.matrix(data.frame(tmp$ES)[-2,])}
-        es.mean1 <-tmp2[,1]
+        trtname <-names(tmp$ES)
+        if(is.null(trtname)){trtname <-names(tmp$ES)}
+        trtpos <-substr(trtname, (nchar(trtname)-nchar(group)+1),  nchar(trtname))==group
+        trt <- trtname[trtpos]
+        if( sum((trtname %in%trt))==0){stop("Group must be one of the intervention values")}
+        if(Conditional==TRUE) {tmp2 <- tmp$ES[[trt]]}
+        if(Conditional==FALSE){tmp2 <- tmp$Unconditional$ES[[trt]]}
+        es.mean1 <- tmp2[,1]
         es.lower1 <-tmp2[,2]
         es.upper1 <-tmp2[,3]
         p.name1 <- rep(modelNames[k],length(es.mean1))
-        var.name1 <- rep(c("Within","Total"),1)
+        var.name1 <- rownames(tmp2)
+
 
       }
+
 
       es.mean <- c(es.mean,es.mean1)
       es.lower <- c(es.lower,es.lower1)
@@ -274,32 +291,33 @@ plotObject <- function(analyticObject,group=NULL, Conditional=TRUE,ES_Total=TRUE
     }
 
 
-    xtp <- max(range(c(es.mean,es.lower,es.upper)))-1.2
-    xub <- ifelse(max(range(c(es.mean,es.lower,es.upper))) > 1.3, 2+xtp ,2)
-    xlb <- ifelse(max(range(c(es.mean,es.lower,es.upper))) > 1.3, -2+xtp,-2)
-    tlb <- ifelse(max(range(c(es.mean,es.lower,es.upper))) > 1.3, -2+xtp ,-2)
-    vlb <- ifelse(max(range(c(es.mean,es.lower,es.upper))) > 1.3, -1.25+xtp ,-1)
-    tub <- ifelse(max(range(c(es.mean,es.lower,es.upper))) > 1.3, 1.25+xtp ,1.5)
-    alb <- ifelse(max(range(c(es.mean,es.lower,es.upper))) > 1.3, vlb ,-1)
+    MyData1 <- data.frame(ES=es.mean,LB.95=es.lower,UB.95=es.upper,Variance=var.name,Name=p.name)
+    MyData1<- MyData1[order(MyData1$Variance,decreasing = T),]
+    MyData1$Anot <- paste0(MyData1$ES, " [", MyData1$LB.95,", ", MyData1$UB.95,"]")
+    MyData1$Index <- 1:dim(MyData1)[1]
+    MyData1$Xaxis <- (max(MyData1$UB.95))+0.05
 
+    Ann_text <- data.frame(Index = length(MyData1$Variance[MyData1$Variance=="Within"])+0.5,
+                           ES = MyData1$Xaxis[1],LB.95=0, UB.95=0,lab = "Text",
+                           Variance = factor("Total",levels = c("Within", "Total")))
 
-    alb <- ifelse(min(range(c(es.mean,es.lower,es.upper)))<=(alb+0.1),alb-(min(range(c(es.mean,es.lower,es.upper)))- alb ),alb)
+    #ggplot
+    p <- ggplot(data=MyData1, aes(y=Index, x=ES, xmin=LB.95, xmax=UB.95))
+    p <- p + geom_point()
+    p <- p + geom_point(data=subset(MyData1, Variance=="Total"), color="Black", size=2)
+    p <- p + geom_errorbarh(height=.1)
+    p <- p + scale_x_continuous(limits=c(min(MyData1$LB.95),(max(MyData1$UB.95))+1),breaks=c(0,min(MyData1$LB.95),(max(MyData1$UB.95))), name=expression(paste("Hedge's ", italic("g"))))
+    p <- p + scale_y_continuous(breaks=MyData1$Index, labels = MyData1$Name, trans="reverse")
+    p <- p + geom_vline(xintercept=0, color="black", linetype="dashed", alpha=.5)
+    p <- p + facet_grid(Variance~., scales= "free", space="free")
+    p <- p + ylab("Models")
+    p <- p + theme_bw()
+    p <- p + theme(text=element_text(size=16, color="black"))
+    p <- p + theme(panel.spacing = unit(1, "lines"))
+    p <- p + geom_text(aes(y = Index, x = MyData1$Xaxis,label = Anot),hjust = 0)
+    p <- p + geom_text(data = Ann_text,label = "95% CI",hjust = -1,size=4,fontface = "bold")
+    p
 
-    par_original <- par()[c("cex","font")]
-
-    op <- par(cex=1,font=1)
-    forest(x=es.mean,ci.lb=es.lower,ci.ub=es.upper,xlab="Hedge's g", ylim=c(0,(length(es.upper)+3)),
-           slab=p.name,xlim=c(xlb,xub),alim = c(-1,1.5),ilab=var.name,ilab.xpos=alb,
-           pch=as.numeric(as.factor(p.name)))
-
-
-
-    par(font=2)
-    text(xlb, (length(es.upper)+1.5),"Model", pos=4)
-    text((alb-0.25), (length(es.upper)+1.5),"Variance", pos=4)
-    text(tub, (length(es.upper)+1.5),"95% CI", pos=4)
-
-    par(par_original)
   }
 
 }

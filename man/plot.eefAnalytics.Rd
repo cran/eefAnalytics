@@ -4,14 +4,14 @@
 \alias{plot.eefAnalytics}
 \title{A plot method for an eefAnalytics S3 object obtained from the eefAnalytics package.}
 \usage{
-\method{plot}{eefAnalytics}(x, group = NULL, Conditional = TRUE, ES_Total = TRUE, slop = FALSE, ...)
+\method{plot}{eefAnalytics}(x, group, Conditional = TRUE, ES_Total = TRUE, slope = FALSE, ...)
 }
 \arguments{
 \item{x}{an output object from the eefAnalytics package.}
 
-\item{group}{a scalar value indicating which intervention to plot.
-This must not be greater than the number of intervention groups excluding the control group.
-For a two arm trial, the maximum value is 1 and a maximum value of 2 for three arm trial.}
+\item{group}{a string/scalar value indicating which intervention to plot.
+This must be one of the values of intervention variable excluding the control group.
+For a two arm trial, the maximum number of values to consider is 1 and 2 for three arm trial.}
 
 \item{Conditional}{a logical value to indicate whether to plot the conditional effect size.
 The default is Conditional=TRUE, otherwise Conditional=FALSE should be specified for plot based on the unconditional effect size.
@@ -21,8 +21,8 @@ The default is Conditional=TRUE, otherwise Conditional=FALSE should be specified
 The default is ES_Total=TRUE, to plot the effect size using total variance.
 ES_Total=FALSE should be specified for the effect size based on within school or residuals variance.}
 
-\item{slop}{A logical value indicating whether to return the plot of random intercept (default is slop=FALSE).
-return other school-by-intervention interaction random slope (s) is slop=TRUE.
+\item{slope}{A logical value indicating whether to return the plot of random intercept (default is slope=FALSE).
+return other school-by-intervention interaction random slope (s) is slope=TRUE.
 This argument is suitable only for mstBayes and mstFREQ functions.}
 
 \item{...}{arguments passed to \code{\link[graphics]{plot.default}}}
