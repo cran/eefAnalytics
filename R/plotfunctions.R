@@ -52,7 +52,7 @@ plot.eefAnalytics <- function(x,group, Conditional=TRUE,ES_Total=TRUE,slope=FALS
 #' @details \code{ComparePlot} produces a bar plot which compares the effect sizes and the associated confidence intervals from the different models.
 #' For a multilevel model, it shows the effect size based on residual variance and total variance.
 #'
-#' @return Returns a bar plot to compare the different methods.
+#' @return Returns a bar plot to compare the different methods. The returned figure can be further modified as any \code{\link[ggplot2]{ggplot}}
 #' @example inst/examples/compareExample.R
 ComparePlot <- function(eefAnalyticsList,group, Conditional=TRUE,ES_Total=TRUE,modelNames){
   if(!is(eefAnalyticsList,"list")){stop("eefAnalyticsList is not a list.")}
@@ -135,7 +135,7 @@ plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare
 
       par_original <- par()[c("mar","xpd")]
       par_original0<- par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
-      plot(thd, tmp2[,1], col="blue", type="b",ylim=c(0,max(tmp2)), xlab=expression("Effect size" >= "Threshold"), ylab="Posterior probability")
+      plot(thd, tmp2[,1], col="blue", type="b",ylim=c(0,max(tmp2)), xlab="Threshold", ylab="Posterior probability")
       on.exit(par(par_original0))
       on.exit(par(par_original))
     }
@@ -149,7 +149,7 @@ plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare
 
     if(is.null(group)){
 
-      tmp000  <- data.frame(analyticObject2$SchEffects)
+      tmp000  <- data.frame(analyticObject$SchEffects)#use analyticObject since both (un)condition has the same SchEffects object.
       if(slope==FALSE){
         tmp00 <- tmp000[,grep("Schools|Intercept|Estimate",names(tmp000))]
         mar11 <-  c(5, 4, 4, 2) + 0.1
@@ -178,6 +178,10 @@ plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare
       title(xlab="School labels", outer = TRUE, line = lines1,cex.lab = 1.2)
       on.exit(par(op))
     }
+
+
+
+
 
     if( !is.null(group) & sum(names(analyticObject)=="Bootstrap")>0){
       ntp <- length(analyticObject2$ES)
@@ -220,7 +224,7 @@ plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare
 
       par_original <- par()[c("mar","xpd")]
       op<- par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
-      plot(thd, tmp2.within, col="blue", type="b",ylim=c(0,max(tmp2)), xlab=expression("Effect size" >= "Threshold"), ylab="Posterior probability",...)
+      plot(thd, tmp2.within, col="blue", type="b",ylim=c(0,max(tmp2)), xlab="Threshold", ylab="Posterior probability",...)
       lines(thd, tmp2.total, col="red", type="b", lty=2)
       legend("topright", legend=c("within", "total"), col=c("blue", "red"), lty=1:2, cex=0.8)
       on.exit(par(op))
@@ -296,28 +300,32 @@ plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare
     MyData1$Anot <- paste0(MyData1$ES, " [", MyData1$LB.95,", ", MyData1$UB.95,"]")
     MyData1$Index <- 1:dim(MyData1)[1]
     MyData1$Xaxis <- (max(MyData1$UB.95))+0.05
+    Mybreaks <-  round(c(min(MyData1$LB.95),(min(MyData1$LB.95)+(max(MyData1$UB.95)))/2,max(MyData1$UB.95)),2)
+    xlimits <- c(min(min(MyData1$LB.95),0),(max(MyData1$UB.95))+0.4)
 
     Ann_text <- data.frame(Index = length(MyData1$Variance[MyData1$Variance=="Within"])+0.5,
                            ES = MyData1$Xaxis[1],LB.95=0, UB.95=0,lab = "Text",
                            Variance = factor("Total",levels = c("Within", "Total")))
 
     #ggplot
-    p <- ggplot(data=MyData1, aes(y=Index, x=ES, xmin=LB.95, xmax=UB.95))
+    p <- ggplot(data=MyData1, aes(x=ES, y=Name, xmin=LB.95, xmax=UB.95))
     p <- p + geom_point()
-    p <- p + geom_point(data=subset(MyData1, Variance=="Total"), color="Black", size=2)
     p <- p + geom_errorbarh(height=.1)
-    p <- p + scale_x_continuous(limits=c(min(MyData1$LB.95),(max(MyData1$UB.95))+1),breaks=c(0,min(MyData1$LB.95),(max(MyData1$UB.95))), name=expression(paste("Hedge's ", italic("g"))))
-    p <- p + scale_y_continuous(breaks=MyData1$Index, labels = MyData1$Name, trans="reverse")
+        p <- p + scale_x_continuous(limits=xlimits ,breaks=Mybreaks, name=expression(paste("Hedge's ", italic("g"))))
     p <- p + geom_vline(xintercept=0, color="black", linetype="dashed", alpha=.5)
-    p <- p + facet_grid(Variance~., scales= "free", space="free")
+    if(sum(unique(MyData1$Variance)%in% "Total")>0){p <- p + facet_grid(Variance~., scales= "free", space="free")}
     p <- p + ylab("Models")
     p <- p + theme_bw()
+    p <- p + theme(axis.text.y =element_text(color="black"))
     p <- p + theme(text=element_text(size=16, color="black"))
     p <- p + theme(panel.spacing = unit(1, "lines"))
-    p <- p + geom_text(aes(y = Index, x = MyData1$Xaxis,label = Anot),hjust = 0)
-    p <- p + geom_text(data = Ann_text,label = "95% CI",hjust = -1,size=4,fontface = "bold")
+    p <- p + geom_text(aes(x = Xaxis,y = Name, label = Anot),hjust = 0)
+    p <- p + geom_text(data = Ann_text, y=Inf,label = "95% CI",hjust = -1.1,vjust = -0.5,size=4,fontface = "bold")
+    p <- p + coord_cartesian(clip = "off")
+    p <- p + theme(plot.margin = unit(c(30,5,5,5), "point"))
     p
 
   }
 
 }
+

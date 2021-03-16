@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-[![Travis build status](https://travis-ci.com/germaine86/eefAnalytics_v10.svg?branch=master)](https://travis-ci.com/germaine86/eefAnalytics_v10)
+[![Travis build status](https://travis-ci.com/germaine86/eefAnalytics.svg?branch=master)](https://travis-ci.com/germaine86/eefAnalytics)
 
 
 
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 
 ```
 Package: eefAnalytics
-Version: 1.0.10
+Version: 1.0.11
 Date: 2021-02-11
 Title: Robust Analytical Methods for Evaluating Educational
         Interventions using Randomised Controlled Trials Designs
@@ -82,7 +82,7 @@ Argument      |Description
 ## Value
 
 
- Returns a bar plot to compare the different methods.
+ Returns a bar plot to compare the different methods. The returned figure can be further modified as any  [`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html) 
 
 
 ## Examples

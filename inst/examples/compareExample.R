@@ -28,7 +28,7 @@ outputMSTBoot <- mstFREQ(Posttest~ Intervention + Prettest,
 
 outputSRTbayes <- srtBayes(Posttest~ Intervention + Prettest,
                            intervention = "Intervention",
-                           nSim = 2000, data = mstData)
+                           nsim = 2000, data = mstData)
 
 ## comparing different results
 
