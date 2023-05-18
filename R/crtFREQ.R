@@ -116,7 +116,7 @@ crtFREQ.formula <- function(formula,random,intervention,baseln,nPerm,nBoot,type,
         ran[,i]<-reinfl(varcor=cov[,i],J=length(ran[,i]),res=ran[,i])
         }
       fixedDesignMatrix<-tryCatch(as.data.frame(merge(cbind(fixedDesignMatrix,cluster,pred,res),ran,all.x=TRUE,by="cluster")))
-      colnames(fixedDesignMatrix)[(ncol(fixedDesignMatrix)-5):ncol(fixedDesignMatrix)]<-c("feprd","Ufeprd","e.rsd","Ue.rsd","rndief","Urand.ef")
+      colnames(fixedDesignMatrix)[(ncol(fixedDesignMatrix)-5):ncol(fixedDesignMatrix)]<-c("feprd","Ufeprd","e.rsd","Ue.rsd","rand.ef","Urand.ef")
     }
 
     if(nBoot<1000){warning("Users should specify a higher number of iterations for valid results (nBoot>=1000)")}
