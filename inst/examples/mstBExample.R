@@ -6,8 +6,12 @@ if(interactive()){
   ## Bayesian analysis of multisite randomised trials   ##
   ########################################################
 
-  output <- mstBayes(Posttest~ Intervention+Prettest,random="School",
-                     intervention="Intervention",nsim=2000,data=mstData)
+  output <- mstBayes(formula = Posttest ~ Prettest + Intervention,
+                     random = "School",
+                     intervention = "Intervention",
+                     nSim = 10000,
+                     data = mstData)
+  output
 
   ### Fixed effects
   beta <- output$Beta
@@ -20,6 +24,19 @@ if(interactive()){
   ## Covariance matrix
   covParm <- output$covParm
   covParm
+
+  ## Prob ES
+  ProbES <- output$ProbES
+  ProbES
+
+  ## Unconditional
+  Unconditional <- output$Unconditional
+  Unconditional
+
+  ## Random Effect
+  randomEffects <- output$SchEffects
+  randomEffects
+
 
   ### plot random effects for schools
 

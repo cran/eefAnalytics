@@ -2,60 +2,40 @@
 % Please edit documentation in R/mstBayes.R
 \name{mstBayes}
 \alias{mstBayes}
-\title{Bayesian analysis of Multisite Randomised Education Trials using Vague Priors.}
+\title{Bayesian analysis of Multisite Randomised Education Trials (MST) using Vague Priors.}
 \usage{
-mstBayes(
-  formula,
-  random,
-  intervention,
-  baseln,
-  adaptD,
-  nsim = 2000,
-  condopt,
-  uncopt,
-  data,
-  threshold = 1:10/10,
-  ...
-)
+mstBayes(formula, random, intervention, nSim, data)
 }
 \arguments{
-\item{formula}{the model to be analysed is of the form y ~ x1+x2+.... Where y is the outcome variable and Xs are the independent variables.}
+\item{formula}{The model to be analysed. It should be of the form y ~ x1 + x2 + ..., where y is the outcome variable and Xs are the predictors.}
 
-\item{random}{a string variable specifying the "clustering variable" as contained in the data. See example below.}
+\item{random}{A string specifying the "clustering variable" (e.g., schools or sites) as found in the dataset.}
 
-\item{intervention}{a string variable specifying the "intervention variable" as appearing in the formula and the data. See example below.}
+\item{intervention}{A string specifying the "intervention variable" as it appears in the formula.}
 
-\item{baseln}{A string variable allowing the user to specify the reference category for intervention variable. When not specified, the first level will be used as a reference.}
+\item{nSim}{Number of MCMC iterations to be performed. A minimum of 10,000 is recommended to ensure convergence.}
 
-\item{adaptD}{As this function uses rstanarm, this term provides the target average proposal acceptance probability during Stan’s adaptation period. Default is NULL.}
-
-\item{nsim}{number of MCMC iterations per chain. Default is 2000.}
-
-\item{condopt}{additional arguments of \code{\link[rstanarm]{stan_glm}} to be passed only to the conditional model specification (for example, defining priors only for the conditional model, etc.).}
-
-\item{uncopt}{additional arguments of \code{\link[rstanarm]{stan_glm}} to be passed only to the unconditional model specification (for example, defining priors only for the unconditional model, etc.).}
-
-\item{data}{data frame containing the data to be analysed.}
-
-\item{threshold}{a scalar or vector of pre-specified threshold(s) for estimating Bayesian posterior probability that the observed effect size is greater than or equal to the threshold(s).}
-
-\item{...}{additional arguments of \code{\link[rstanarm:stan_glmer]{stan_lmer}} to be passed both to the conditional and unconditional model specifications.}
+\item{data}{A data frame containing the variables referenced in the formula, including predictors, the clustering variable, and the intervention.}
 }
 \value{
-S3 object; a list consisting of
+S3 object; a list consisting of:
 \itemize{
-\item \code{Beta}: Estimates and credible intervals for variables specified in the model. Use \code{summary.eefAnalytics} to get Rhat and effective sample size for each estimate.
-\item \code{ES}: Conditional Hedges' g effect size and its 95\% credible intervals.
-\item \code{covParm}: A list of variance decomposition into between cluster variance-covariance matrix (schools and school by intervention) and within cluster variance (Pupils). It also contains intra-cluster correlation (ICC).
-\item \code{SchEffects}: A vector of the estimated deviation of each school from the intercept and intervention slope.
-\item \code{ProbES}: A matrix of Bayesian posterior probabilities such that the observed effect size is greater than or equal to a pre-specified threshold(s).
-\item \code{Model}: A stan_glm object used in ES computation, this object can be used for convergence diagnostic.
-\item \code{Unconditional}: A list of unconditional effect sizes, covParm and ProbES obtained based on between and within cluster variances from the unconditional model (model with only the intercept as a fixed effect).
+\item \code{Beta}: Estimates and credible intervals for the predictors specified in the model (posterior distributions).
+\item \code{ES}: Hedges' g effect size for the intervention(s). If bootstrapping is not used, 95\% credible intervals are computed based on MCMC sampling.
+\item \code{covParm}: Variance components broken down into between-cluster variance (e.g., between schools), within-cluster variance (e.g., within pupils), and intra-cluster correlation (ICC)..
+\item \code{randomEffects}: Posterior estimates of random intercepts for each cluster (e.g., schools).
+\item \code{ProbES}: A matrix showing the probability of observing an effect size larger than various thresholds (0, 0.05, 0.10, ...).
+\item \code{Unconditional}: A list containing the unconditional effect size and variance decomposition.
 }
 }
 \description{
-\code{mstBayes} performs analysis of multisite randomised education trials using a multilevel model under a Bayesian setting
-assuming vague priors.
+\code{mstBayes} performs Bayesian multilevel analysis of multisite randomised education trials, utilising vague priors
+and JAGS language to fit the model. It assumes hierarchical clustering, such as students within schools, and estimates
+treatment effects while accounting for this structure.
+}
+\details{
+The function provides posterior estimates for fixed effects (predictors) and random effects (clustering) under a Bayesian framework.
+Effect sizes are computed using Hedges' g, and variance components are decomposed into between-cluster and within-cluster variances.
 }
 \examples{
 if(interactive()){
@@ -66,8 +46,12 @@ if(interactive()){
   ## Bayesian analysis of multisite randomised trials   ##
   ########################################################
 
-  output <- mstBayes(Posttest~ Intervention+Prettest,random="School",
-                     intervention="Intervention",nsim=2000,data=mstData)
+  output <- mstBayes(formula = Posttest ~ Prettest + Intervention,
+                     random = "School",
+                     intervention = "Intervention",
+                     nSim = 10000,
+                     data = mstData)
+  output
 
   ### Fixed effects
   beta <- output$Beta
@@ -80,6 +64,19 @@ if(interactive()){
   ## Covariance matrix
   covParm <- output$covParm
   covParm
+
+  ## Prob ES
+  ProbES <- output$ProbES
+  ProbES
+
+  ## Unconditional
+  Unconditional <- output$Unconditional
+  Unconditional
+
+  ## Random Effect
+  randomEffects <- output$SchEffects
+  randomEffects
+
 
   ### plot random effects for schools
 

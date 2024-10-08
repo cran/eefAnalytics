@@ -6,8 +6,12 @@ if(interactive()){
   ## Bayesian analysis of cluster randomised trials     ##
   ########################################################
 
-  output <- crtBayes(Posttest~ Intervention+Prettest,random="School",
-                     intervention="Intervention",nsim=2000,data=crtData)
+  output <- crtBayes(formula = Posttest ~ Prettest + Intervention,
+                     random = "School",
+                     intervention = "Intervention",
+                     nsim = 10000,
+                     data = crtData)
+  output
 
   ### Fixed effects
   beta <- output$Beta
@@ -20,6 +24,15 @@ if(interactive()){
   ## Covariance matrix
   covParm <- output$covParm
   covParm
+
+  ## Prob ES
+  ProbES <- output$ProbES
+  ProbES
+
+  ## Unconditional
+  Unconditional <- output$Unconditional
+  Unconditional
+
 
   ### plot random effects for schools
 

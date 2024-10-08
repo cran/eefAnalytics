@@ -7,7 +7,7 @@ data(mstData)
 ########################################################
 
 output <- srtBayes(Posttest~ Intervention+Prettest,
-		intervention="Intervention",nsim=2000,data=mstData)
+		intervention="Intervention",nsim=10000,data=mstData)
 
 ### Fixed effects
 beta <- output$Beta

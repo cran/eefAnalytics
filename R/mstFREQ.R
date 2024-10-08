@@ -37,7 +37,8 @@ mstFREQ.default <- function(formula,random,intervention,baseln,nPerm,data,type,c
 
 #' @export
 mstFREQ.formula <- function(formula,random,intervention,baseln,nPerm,data,type,ci,seed,nBoot){
-
+  requireNamespace("lme4", quietly = TRUE) || stop("Please install the 'lme4' package.")
+  #require(lme4)
   data <- na.omit(data[ ,unique(c(all.vars(formula),random, intervention))])
   data <- data[order(data.frame(data)[,which(colnames(data)==random)],data[,which(colnames(data)==intervention)]),]
   trt <- data[,which(colnames(data)==intervention)]
@@ -123,11 +124,11 @@ mstFREQ.formula <- function(formula,random,intervention,baseln,nPerm,data,type,c
       #ran[[2]][,1]<-ran[[2]][,1]-mean(ran[[2]][,1])
 
       tryCatch(
-      for(i in names(sigma2) ){#1:2
-        res[[i]]<-reinfl(varcor=sigma2[i],J=length(res[[i]]),res=as.matrix(res[[i]]))
-        ran[[i]]<-reinfl(varcor=cov[[i]],J=length(ran[[i]][,1]),res=as.matrix(ran[[i]]))#dose not run
+        for(i in names(sigma2) ){#1:2
+          res[[i]]<-reinfl(varcor=sigma2[i],J=length(res[[i]]),res=as.matrix(res[[i]]))
+          ran[[i]]<-reinfl(varcor=cov[[i]],J=length(ran[[i]][,1]),res=as.matrix(ran[[i]]))#dose not run
         },
-      error = function(e) {message(e,"Reflating of residuals has failed; variance estimates of residuals may be shrunk towards zero.")})
+        error = function(e) {message(e,"Reflating of residuals has failed; variance estimates of residuals may be shrunk towards zero.")})
 
       clusters <- list(as.numeric(rownames(ran[[1]])), as.numeric(rownames(ran[[2]])))
       ran<-Map(cbind, ran, cluster = clusters)
@@ -139,7 +140,7 @@ mstFREQ.formula <- function(formula,random,intervention,baseln,nPerm,data,type,c
       colnames(merged[["Uncond"]])[2:4]<-c("Ufeprd","Ue.rsd","Urand.ef")
 
       fixedDesignMatrix<-cbind(fixedDesignMatrix,cbind(merged[[1]][,-which(names(merged[[1]]) %in% "cluster")],merged[[2]][,-which(names(merged[[2]]) %in% "cluster")]))
-      }
+    }
 
     tid <- c(1:nrow(fixedDesignMatrix))
 
@@ -434,7 +435,7 @@ rbd.rbd <- function(posttest,fixedDesignMatrix,intervention,trt,cluster,type,bt,
     fixedDesignMatrix2<-fixedDesignMatrix
     cluster2 <- as.matrix(cluster)
     trt2<-as.matrix(as.numeric((trt)))
-    }
+  }
 
   freqFit <- try(lmer(posttest2~ fixedDesignMatrix2-1+(1+trt2|cluster2)),silent=TRUE)
   output2 <- NULL
@@ -603,9 +604,8 @@ reinfl<-function(varcor,J,res){
   Lr<-t(chol(varcor))
   S<-crossprod(res)/J#crossprod(res)= t(res)%*%res
   Ls<-t(chol(S))# if you want to consider the "non-negative definite matrix" as well
-               # you could cosider the use of pivote: t(chol(S, pivot = TRUE))
+  # you could cosider the use of pivote: t(chol(S, pivot = TRUE))
   A<-t(Lr%*%solve(Ls))
   out<-res%*%A
   return(out)
 }
-

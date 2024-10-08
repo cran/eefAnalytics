@@ -75,3 +75,4 @@ summary.eefAnalytics <- function(object,...){
   class(res) <- "eefAnalyticssummary"
   invisible(res)
 }
+
