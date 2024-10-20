@@ -38,6 +38,7 @@ ul.task-list{list-style: none;}
 </style>
 
 
+
 <style type="text/css">
 code {
 white-space: pre;
@@ -118,13 +119,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -338,7 +346,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>Package: eefAnalytics
 Type: Package
 Title: Robust Analytical Methods for Evaluating Educational Interventions using Randomised Controlled Trials Designs
-Version: 1.1.2
+Version: 1.1.3
 Author: Germaine Uwimpuhwe, Qing Zhang, Akansha Singh, Dimitris Vallis, Steve Higgins, ZhiMin Xiao, Ewoud De Troyer and Adetayo Kasim
 Maintainer: Germaine Uwimpuhwe &lt;germaine.uwimpuhwe@durham.ac.uk&gt;
 Description: Analysing data from evaluations of educational interventions using a randomised controlled trial design. Various analytical tools to perform sensitivity analysis using different methods are supported (e.g. frequentist models with bootstrapping and permutations options, Bayesian models). The included commands can be used for simple randomised trials, cluster randomised trials and multisite trials. The methods can also be used more widely beyond education trials. This package can be used to evaluate other intervention designs using Frequentist and Bayesian multilevel models.
@@ -478,7 +486,7 @@ figure can be further modified as any <a href="https://ggplot2.tidyverse.org/ref
 <span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a> </span>
 <span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a> outputSRTbayes <span class="ot">&lt;-</span> <span class="fu">srtBayes</span>(Posttest<span class="sc">~</span> Intervention <span class="sc">+</span> Prettest,</span>
 <span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a> <span class="at">intervention =</span> <span class="st">&quot;Intervention&quot;</span>,</span>
-<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a> <span class="at">nSim =</span> <span class="dv">2000</span>, <span class="at">data =</span> mstData)</span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a> <span class="at">nsim =</span> <span class="dv">2000</span>, <span class="at">data =</span> mstData)</span>
 <span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a> </span>
 <span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a> <span class="do">## comparing different results</span></span>
 <span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a> </span>
@@ -870,7 +878,7 @@ accounting for this structure.</p>
 </div>
 <div id="usage-4" class="section level2">
 <h2>Usage</h2>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">mstBayes</span>(formula, random, intervention, nSim, data)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">mstBayes</span>(formula, random, intervention, nsim, data)</span></code></pre></div>
 </div>
 <div id="arguments-3" class="section level2">
 <h2>Arguments</h2>
@@ -948,7 +956,7 @@ a fixed effect).</p></li>
 <span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  output <span class="ot">&lt;-</span> <span class="fu">mstBayes</span>(<span class="at">formula =</span> Posttest <span class="sc">~</span> Prettest <span class="sc">+</span> Intervention,</span>
 <span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>                     <span class="at">random =</span> <span class="st">&quot;School&quot;</span>,</span>
 <span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>                     <span class="at">intervention =</span> <span class="st">&quot;Intervention&quot;</span>,</span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>                     <span class="at">nSim =</span> <span class="dv">10000</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>                     <span class="at">nsim =</span> <span class="dv">10000</span>,</span>
 <span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>                     <span class="at">data =</span> mstData)</span>
 <span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  output</span>
 <span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a></span>

@@ -109,7 +109,9 @@ CRT.function <- function(data, formula,random, intervention, nsim){
   #### data preparation
   outcome <- all.vars(formula)[1] ## Y: Posttest
   dummies<- data.frame(model.matrix(formula, data=Pdata)) ## X0-Intercept, X1-Prettest, X2-Intervention
-  Pdata0 <- na.omit(dummies[,!(names(dummies) %in% "X.Intercept.")])
+  Pdata0 <- data.frame(na.omit(dummies[,!(names(dummies) %in% "X.Intercept.")]))
+  names(Pdata0) <- setdiff(names(dummies), "X.Intercept.")
+
   Pdata1<-na.omit(cbind(post=Pdata[,outcome],Pdata0)) #all covariates and school dummies
   Pdata1[,random] <- as.numeric(as.factor(Pdata[,random]))
 
@@ -149,7 +151,7 @@ CRT.function <- function(data, formula,random, intervention, nsim){
   #************************
   UNCdata <- list(N=N,M=M, school=Pdata1[,random], post=Pdata1$post)
   jags.UNCparams <- c("sigma","sigma.tt","icc")
-  filenames_MLM_UNC <- file.path("inst/jags/MLM_UNC.txt")
+  filenames_MLM_UNC <- system.file("jags", "MLM_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/MLM_UNC.txt")
   # 1. UNC Jags model -----------
   #### Summarise UNCONDITIONAL JAGS output ####
   UNC.ols<-jags(model.file=filenames_MLM_UNC, data = UNCdata, n.iter= nsim, n.burnin = nsim/2, inits=UNCjags.inits,n.thin = 10, parameters.to.save=jags.UNCparams)
@@ -172,7 +174,7 @@ CRT.function <- function(data, formula,random, intervention, nsim){
                    "UNC.ES.Within","UNC.ES.Total","UNC.g.with","UNC.g.Total","UNC.sigma.Within","UNC.sigma.Total","beta","UNC.ICC")
 
   # 2. COND Jags model -----------
-  filenames_CRT <- file.path("inst/jags/CRT.txt")
+  filenames_CRT <- system.file("jags", "CRT.txt", package = "eefAnalytics")#file.path("inst/jags/CRT.txt")
   cat(paste("
                 model{
                 for(i in 1:N){

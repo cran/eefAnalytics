@@ -25,7 +25,7 @@ library(eefAnalytics)
 Package: eefAnalytics
 Type: Package
 Title: Robust Analytical Methods for Evaluating Educational Interventions using Randomised Controlled Trials Designs
-Version: 1.1.2
+Version: 1.1.3
 Author: Germaine Uwimpuhwe, Qing Zhang, Akansha Singh, Dimitris Vallis, Steve Higgins, ZhiMin Xiao, Ewoud De Troyer and Adetayo Kasim
 Maintainer: Germaine Uwimpuhwe <germaine.uwimpuhwe@durham.ac.uk>
 Description: Analysing data from evaluations of educational interventions using a randomised controlled trial design. Various analytical tools to perform sensitivity analysis using different methods are supported (e.g. frequentist models with bootstrapping and permutations options, Bayesian models). The included commands can be used for simple randomised trials, cluster randomised trials and multisite trials. The methods can also be used more widely beyond education trials. This package can be used to evaluate other intervention designs using Frequentist and Bayesian multilevel models.
@@ -131,7 +131,7 @@ Argument      |Description
  
  outputSRTbayes <- srtBayes(Posttest~ Intervention + Prettest,
  intervention = "Intervention",
- nSim = 2000, data = mstData)
+ nsim = 2000, data = mstData)
  
  ## comparing different results
  
@@ -436,7 +436,7 @@ within schools, and estimates treatment effects while accounting for this struct
 ## Usage
 
 ```r
-mstBayes(formula, random, intervention, nSim, data)
+mstBayes(formula, random, intervention, nsim, data)
 ```
 
 
@@ -483,7 +483,7 @@ Argument      |Description
   output <- mstBayes(formula = Posttest ~ Prettest + Intervention,
                      random = "School",
                      intervention = "Intervention",
-                     nSim = 10000,
+                     nsim = 10000,
                      data = mstData)
   output
 

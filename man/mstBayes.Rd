@@ -4,7 +4,7 @@
 \alias{mstBayes}
 \title{Bayesian analysis of Multisite Randomised Education Trials (MST) using Vague Priors.}
 \usage{
-mstBayes(formula, random, intervention, nSim, data)
+mstBayes(formula, random, intervention, nsim, data)
 }
 \arguments{
 \item{formula}{The model to be analysed. It should be of the form y ~ x1 + x2 + ..., where y is the outcome variable and Xs are the predictors.}
@@ -13,7 +13,7 @@ mstBayes(formula, random, intervention, nSim, data)
 
 \item{intervention}{A string specifying the "intervention variable" as it appears in the formula.}
 
-\item{nSim}{Number of MCMC iterations to be performed. A minimum of 10,000 is recommended to ensure convergence.}
+\item{nsim}{Number of MCMC iterations to be performed. A minimum of 10,000 is recommended to ensure convergence.}
 
 \item{data}{A data frame containing the variables referenced in the formula, including predictors, the clustering variable, and the intervention.}
 }
@@ -49,7 +49,7 @@ if(interactive()){
   output <- mstBayes(formula = Posttest ~ Prettest + Intervention,
                      random = "School",
                      intervention = "Intervention",
-                     nSim = 10000,
+                     nsim = 10000,
                      data = mstData)
   output
 

@@ -16,7 +16,7 @@
 #' @param formula The model to be analysed. It should be of the form y ~ x1 + x2 + ..., where y is the outcome variable and Xs are the predictors.
 #' @param random A string specifying the "clustering variable" (e.g., schools or sites) as found in the dataset.
 #' @param intervention A string specifying the "intervention variable" as it appears in the formula.
-#' @param nSim Number of MCMC iterations to be performed. A minimum of 10,000 is recommended to ensure convergence.
+#' @param nsim Number of MCMC iterations to be performed. A minimum of 10,000 is recommended to ensure convergence.
 #' @param data A data frame containing the variables referenced in the formula, including predictors, the clustering variable, and the intervention.
 #' @return S3 object; a list consisting of:
 #' \itemize{
@@ -30,13 +30,13 @@
 #'
 #' @example inst/examples/mstBExample.R
 #'
-mstBayes <- function(formula,random,intervention,nSim,data)UseMethod("mstBayes")
+mstBayes <- function(formula,random,intervention,nsim,data)UseMethod("mstBayes")
 
 #' @export
-mstBayes.default <- function(formula,random,intervention,nSim=nSim,data){stop("No correct formula input given.")}
+mstBayes.default <- function(formula,random,intervention,nsim=nsim,data){stop("No correct formula input given.")}
 
 #' @export
-mstBayes.formula <- function(formula,random,intervention,nSim=nSim,data){
+mstBayes.formula <- function(formula,random,intervention,nsim=nsim,data){
   data1 <- data[order(data[,which(colnames(data)==random)],data[,which(colnames(data)==intervention)]),]
   tmp3 <- which(colnames(data1)==intervention)
   data1[,tmp3] <- as.factor(data1[,tmp3])
@@ -52,7 +52,7 @@ mstBayes.formula <- function(formula,random,intervention,nSim=nSim,data){
   intervention <- intervention
   trt <- data1[,which(colnames(data1)==intervention)]
   tmp2 <- which(colnames(data1)==random)
-  nsim=nSim
+  nSim <- nsim
 
   if(length(tmp2)!= 1){stop("Cluster variable misspecified")}
   if(length(tmp3)!= 1){stop("Intervention variable misspecified")}
@@ -94,7 +94,9 @@ MST.function <- function(data, formula,random, intervention, nsim){
   #### data preparation
   outcome <- all.vars(formula)[1] ## Y: Posttest
   dummies<- data.frame(model.matrix(formula, data=Pdata)) ## X0-Intercept, X1-Prettest, X2-Intervention
-  Pdata0 <- na.omit(dummies[,!(names(dummies) %in% "X.Intercept.")])
+  Pdata0 <- data.frame(na.omit(dummies[,!(names(dummies) %in% "X.Intercept.")]))
+  names(Pdata0) <- setdiff(names(dummies), "X.Intercept.") #GU: added
+
   Pdata1<-na.omit(cbind(post=Pdata[,outcome],Pdata0)) #all covariates and school dummies
   Pdata1[,random] <- as.numeric(as.factor(Pdata[,random]))
 
@@ -137,7 +139,8 @@ MST.function <- function(data, formula,random, intervention, nsim){
   jags.UNCparams <- c("sigma","sigma.tt","icc")
   # jags.UNCparams <- c("sigma", "sigma.tt", "icc", "UNC.ES.Within", "UNC.ES.Total", "UNC.g.with", "UNC.g.Total")
   # 1. UNC Jags model -----------
-  filenames_MLM_UNC <- file.path("inst/jags/MLM_UNC.txt")
+  #filenames_MLM_UNC <- paste("
+  filenames_MLM_UNC <- system.file("jags", "MLM_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/MLM_UNC.txt")
   cat(paste("
                 model {
                 # Likelihood
@@ -209,7 +212,7 @@ MST.function <- function(data, formula,random, intervention, nsim){
                    "UNC.ES.Within","UNC.ES.Total","UNC.g.with","UNC.g.Total","UNC.sigma.Within","UNC.sigma.Total","UNC.ICC","beta", "b2diff")
 
   # 2. COND Jags model -----------
-  filenames_MST <- file.path("inst/jags/MST.txt")
+  filenames_MST <- system.file("jags", "MST.txt", package = "eefAnalytics")#file.path("inst/jags/MST.txt")
   cat(paste("
                 model{
                 for(i in 1:N){

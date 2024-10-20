@@ -71,7 +71,8 @@ OLS.function <- function(data, formula, intervention,nsim){
   Pdata <- na.omit(data[,all.vars(formula)])
   outcome <- all.vars(formula)[1] ## Y: Posttest
   dummies<- data.frame(model.matrix(formula, data=Pdata)) ## X0-Intercept, X1-Prettest, X2-Intervention
-  Pdata0 <- na.omit(dummies[,!(names(dummies) %in% "X.Intercept.")])
+  Pdata0 <- data.frame(na.omit(dummies[,!(names(dummies) %in% "X.Intercept.")]))
+  names(Pdata0) <- setdiff(names(dummies), "X.Intercept.")
   Pdata1<-na.omit(cbind(post=Pdata[,outcome],Pdata0)) #all covariates and school dummies
 
   # Jags data
@@ -99,7 +100,9 @@ OLS.function <- function(data, formula, intervention,nsim){
   UNCdata <- list(N=N, post=Pdata1$post)
   jags.UNCparams <- c("sigma")
   # 1. UNC Jags model -----------
-  filenames_OLS_UNC <- file.path("inst/jags/OLS_UNC.txt")
+  system.file("jags", "SRT.txt", package = "eefAnalytics")#
+  #filenames_OLS_UNC <- paste("
+  filenames_OLS_UNC <-  system.file("jags", "OLS_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/OLS_UNC.txt")
   cat(paste("
   model {
     # Likelihood
@@ -134,7 +137,7 @@ OLS.function <- function(data, formula, intervention,nsim){
   jags.params <- c("beta","COND.sigma","UNC.sigma","COND.ES","COND.g","UNC.ES","UNC.g")
 
   # 2. COND Jags model -----------
-  filenames_OLS_CON <- file.path("inst/jags/SRT.txt")
+  filenames_OLS_CON <- system.file("jags", "SRT.txt", package = "eefAnalytics")#file.path("inst/jags/SRT.txt")
   cat(paste("
 
               model{

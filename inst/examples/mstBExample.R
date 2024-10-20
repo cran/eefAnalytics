@@ -9,7 +9,7 @@ if(interactive()){
   output <- mstBayes(formula = Posttest ~ Prettest + Intervention,
                      random = "School",
                      intervention = "Intervention",
-                     nSim = 10000,
+                     nsim = 10000,
                      data = mstData)
   output
 
