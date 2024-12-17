@@ -1,4 +1,25 @@
 
+                model{
+                for(i in 1:N){
+                post[i] ~ dnorm(mu[i],tau)
+                mu[i] <- beta[1]+beta[2]*Prettest[i]+beta[3]*Intervention21[i]+beta[4]*Intervention22[i]+b1[School[i]]+b2[School[i],tt[i]] 
+                }
+
+                for(j in 1:M){
+                b1[j]~dnorm(0.0,tau.b1)
+                #b2[j]~dnorm(0.0,tau.b2)
+                for(k in 1:round(NPost.T)){ b2[j,k]~dnorm(0.0,tau.b2) }
+                for(k in 2:round(NPost.T)){ b2diff[j,k ] <- b2[j,k] - b2[j,1] }
+                }
+
+                tau~dgamma(0.001,0.0001)
+                tau.b1~dgamma(0.001,0.0001)
+                tau.b2~dgamma(0.001,0.0001)
+                sigma<-1/tau
+                sigma.b1<-1/tau.b1
+                sigma.b2<-1/tau.b2
+
+                for(k in 1:p){beta[k]~dnorm(0.0,1.0E-06)}
 
                 # ICC and TOTAL VARIANCE
                 sigma.Total <-sigma + sigma.b1 + sigma.b2
@@ -36,3 +57,4 @@
                 }
                 }
                 }
+                

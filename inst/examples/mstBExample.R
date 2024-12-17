@@ -9,6 +9,8 @@ if(interactive()){
   output <- mstBayes(formula = Posttest ~ Prettest + Intervention,
                      random = "School",
                      intervention = "Intervention",
+                     alpha = 0.05,
+                     digits = 3,
                      nsim = 10000,
                      data = mstData)
   output
@@ -46,26 +48,4 @@ if(interactive()){
 
   plot(output,group=1)
 
-
-  #############################################################################################
-  ## Bayesian analysis of multisite randomised trials using informative priors for treatment ##
-  #############################################################################################
-
-  ### define priors for explanatory variables
-
-  my_prior <- normal(location = c(0,6), scale = c(10,1))
-
-  ### specify the priors for the conditional model only
-
-  output2 <- mstBayes(Posttest~ Prettest+Intervention,random="School",
-                      intervention="Intervention",nsim=2000,data=mstData,
-                      condopt=list(prior=my_prior))
-
-  ### Fixed effects
-  beta2 <- output2$Beta
-  beta2
-
-  ### Effect size
-  ES2 <- output2$ES
-  ES2
 }

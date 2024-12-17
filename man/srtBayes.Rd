@@ -4,24 +4,51 @@
 \alias{srtBayes}
 \title{Bayesian Analysis of Simple Randomised Education Trials (SRT) using Bayesian Linear Regression Model with Vague Priors.}
 \usage{
-srtBayes(formula, intervention, nsim = 10000, data)
+srtBayes(
+  formula,
+  intervention,
+  baseln,
+  nsim = 2000,
+  data,
+  alpha = 0.05,
+  digits = 3,
+  threshold = 1:10/10,
+  condopt,
+  uncopt,
+  ...
+)
 }
 \arguments{
 \item{formula}{The model to be analysed is of the form y~x1+x2+.... Where y is the outcome variable and Xs are the independent variables.}
 
 \item{intervention}{A string variable specifying the "intervention variable" as appearing in the formula and the data. See example below.}
 
+\item{baseln}{A string variable allowing the user to specify the reference category for intervention variable. When not specified, the first level will be used as a reference.}
+
 \item{nsim}{number of MCMC iterations per chain. Default is 2000.}
 
 \item{data}{Data frame containing the data to be analysed.}
+
+\item{alpha}{significant level, default alpha = 0.05.}
+
+\item{digits}{number of decimal places, by default digits=3}
+
+\item{threshold}{a scalar or vector of pre-specified threshold(s) for estimating Bayesian posterior probability such that the observed effect size is greater than or equal to the threshold(s).}
+
+\item{condopt}{additional arguments of \code{\link[R2jags]{jags}} to be passed only to the conditional model specification (for example, defining priors only for the conditional model, etc.).}
+
+\item{uncopt}{additional arguments of \code{\link[R2jags]{jags}} to be passed only to the unconditional model specification (for example, defining priors only for the unconditional model, etc.).}
+
+\item{...}{Common additional arguments of \code{\link[R2jags]{jags}} to be passed to both the conditional and unconditional model specifications}
 }
 \value{
 S3 object; a list consisting of
 \itemize{
 \item \code{Beta}: Estimates and credible intervals for the variables specified in the model. Use \code{summary.eefAnalytics} to get Rhat and effective sample size for each estimate.
 \item \code{ES}: Conditional Hedges' g effect size and its 95\% credible intervals.
-\item \code{sigma}: Residual variance.
+\item \code{sigma2}: Residual variance.
 \item \code{ProbES}: A matrix of Bayesian posterior probabilities such that the observed effect size is greater than or equal to a pre-specified threshold(s).
+\item \code{Model}: A model object from \code{\link[R2jags]{jags}} and an \code{\link[MCMCvis]{MCMCsummary}} object containing only the mean and credible intervals (CIs) as columns.
 \item \code{Unconditional}: A list of unconditional effect sizes, sigma2 and ProbES obtained based on residual variance from the unconditional model (model with only the intercept as a fixed effect).
 }
 }
@@ -33,56 +60,55 @@ This can also be used with schools as fixed effects.
 \examples{
 if(interactive()){
 
-data(mstData)
+  data(mstData)
 
-########################################################
-## Bayesian analysis of simple randomised trials      ##
-########################################################
+  ########################################################
+  ## Bayesian analysis of simple randomised trials      ##
+  ########################################################
 
-output <- srtBayes(Posttest~ Intervention+Prettest,
-		intervention="Intervention",nsim=10000,data=mstData)
+  output <- srtBayes(Posttest~ Intervention+Prettest,
+                     alpha = 0.2,
+                     digits=4,
+                     intervention="Intervention",
+                     nsim=10000,
+                     data=mstData)
 
-### Fixed effects
-beta <- output$Beta
-beta
+  ### Fixed effects
+  beta <- output$Beta
+  beta
 
-### Effect size
-ES1 <- output$ES
-ES1
+  ### Effect size
+  ES1 <- output$ES
+  ES1
 
-## Covariance matrix
-covParm <- output$covParm
-covParm
+  ### Effect size
+  ES2 <- output$Unconditional$ES
+  ES2
 
-### plot random effects for schools
+  ## Covariance matrix
+  covParm1 <- output$sigma2
+  covParm1
 
-plot(output)
 
-### plot posterior probability of an effect size to be bigger than a pre-specified threshold
+  ## Unconditional Covariance matrix
+  covParm2 <- output$Unconditional$sigma2
+  covParm2
 
-plot(output,group=1)
 
-###########################################################################################
-## Bayesian analysis of simple randomised trials using informative priors for treatment  ##
-###########################################################################################
+  ## Prob ES
+  ProbES1 <- output$ProbES
+  ProbES1
 
-### define priors for explanatory variables
 
-my_prior <- normal(location = c(0,6), scale = c(10,1))
+  ## Prob  based on Unconditional ES
+  ProbES2 <- output$Unconditional$ProbES
+  ProbES2
 
-### specify the priors for the conditional model only
 
-output2 <- srtBayes(Posttest~ Prettest+Intervention,
-                    intervention="Intervention",
-                    nsim=2000,data=mstData,
-                    condopt=list(prior=my_prior))
+  ### plot posterior probability of an effect size to be bigger than a pre-specified threshold
 
-### Fixed effects
-beta2 <- output2$Beta
-beta2
+  plot(output,group=1)
 
-### Effect size
-ES2 <- output2$ES
-ES2
+
 }
 }

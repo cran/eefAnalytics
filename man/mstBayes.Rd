@@ -2,9 +2,22 @@
 % Please edit documentation in R/mstBayes.R
 \name{mstBayes}
 \alias{mstBayes}
-\title{Bayesian analysis of Multisite Randomised Education Trials (MST) using Vague Priors.}
+\title{Bayesian analysis of Multisite Randomised Education Trials (MST) using Vague Priors}
 \usage{
-mstBayes(formula, random, intervention, nsim, data)
+mstBayes(
+  formula,
+  random,
+  intervention,
+  baseln,
+  nsim = 10000,
+  data,
+  alpha = 0.05,
+  digits = 3,
+  threshold = c(0, 0.05, seq(0.1, 1, 0.1)),
+  condopt,
+  uncopt,
+  ...
+)
 }
 \arguments{
 \item{formula}{The model to be analysed. It should be of the form y ~ x1 + x2 + ..., where y is the outcome variable and Xs are the predictors.}
@@ -13,25 +26,40 @@ mstBayes(formula, random, intervention, nsim, data)
 
 \item{intervention}{A string specifying the "intervention variable" as it appears in the formula.}
 
+\item{baseln}{A string specifying the reference category for the intervention variable. If not provided, the first level will be used as the reference (e.g., baseln = "0" for an intervention with levels 0 and 1).}
+
 \item{nsim}{Number of MCMC iterations to be performed. A minimum of 10,000 is recommended to ensure convergence.}
 
 \item{data}{A data frame containing the variables referenced in the formula, including predictors, the clustering variable, and the intervention.}
+
+\item{alpha}{significant level, default alpha = 0.05.}
+
+\item{digits}{number of decimal places, by default digits=3}
+
+\item{threshold}{a scalar or vector of pre-specified threshold(s) for estimating Bayesian posterior probability such that the observed effect size is greater than or equal to the threshold(s).}
+
+\item{condopt}{additional arguments of \code{\link[R2jags]{jags}} to be passed exclusively to the conditional model (e.g., defining n.chains only for the conditional model, etc.).}
+
+\item{uncopt}{additional arguments of \code{\link[R2jags]{jags}} to be passed exclusively to the unconditional model (e.g., defining n.chains only for the unconditional model, etc.).}
+
+\item{...}{Common additional arguments of \code{\link[R2jags]{jags}} to be passed to both the conditional and unconditional model specifications}
 }
 \value{
 S3 object; a list consisting of:
 \itemize{
 \item \code{Beta}: Estimates and credible intervals for the predictors specified in the model (posterior distributions).
 \item \code{ES}: Hedges' g effect size for the intervention(s). If bootstrapping is not used, 95\% credible intervals are computed based on MCMC sampling.
-\item \code{covParm}: Variance components broken down into between-cluster variance (e.g., between schools), within-cluster variance (e.g., within pupils), and intra-cluster correlation (ICC)..
+\item \code{covParm}: Variance components broken down into between-cluster variance (e.g., between schools), within-cluster variance (e.g., within pupils), and intra-cluster correlation (ICC).
 \item \code{randomEffects}: Posterior estimates of random intercepts for each cluster (e.g., schools).
 \item \code{ProbES}: A matrix showing the probability of observing an effect size larger than various thresholds (0, 0.05, 0.10, ...).
+\item \code{Model}: A model object from \code{\link[R2jags]{jags}} and an \code{\link[MCMCvis]{MCMCsummary}} object containing only the mean and credible intervals (CIs) as columns.
 \item \code{Unconditional}: A list containing the unconditional effect size and variance decomposition.
 }
 }
 \description{
 \code{mstBayes} performs Bayesian multilevel analysis of multisite randomised education trials, utilising vague priors
 and JAGS language to fit the model. It assumes hierarchical clustering, such as students within schools, and estimates
-treatment effects while accounting for this structure.
+treatment effects while accounting for this structure and assuming that all random effects are independent.
 }
 \details{
 The function provides posterior estimates for fixed effects (predictors) and random effects (clustering) under a Bayesian framework.
@@ -49,6 +77,8 @@ if(interactive()){
   output <- mstBayes(formula = Posttest ~ Prettest + Intervention,
                      random = "School",
                      intervention = "Intervention",
+                     alpha = 0.05,
+                     digits = 3,
                      nsim = 10000,
                      data = mstData)
   output
@@ -86,27 +116,5 @@ if(interactive()){
 
   plot(output,group=1)
 
-
-  #############################################################################################
-  ## Bayesian analysis of multisite randomised trials using informative priors for treatment ##
-  #############################################################################################
-
-  ### define priors for explanatory variables
-
-  my_prior <- normal(location = c(0,6), scale = c(10,1))
-
-  ### specify the priors for the conditional model only
-
-  output2 <- mstBayes(Posttest~ Prettest+Intervention,random="School",
-                      intervention="Intervention",nsim=2000,data=mstData,
-                      condopt=list(prior=my_prior))
-
-  ### Fixed effects
-  beta2 <- output2$Beta
-  beta2
-
-  ### Effect size
-  ES2 <- output2$ES
-  ES2
 }
 }
