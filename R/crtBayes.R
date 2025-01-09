@@ -158,9 +158,10 @@ CRT.function <- function(data, formula,random, intervention, nsim,alpha, digits,
   UNCdata <- list(N=N,M=M, school=Pdata1[,random], post=Pdata1$post)
   jags.UNCparams <- c("sigma","sigma.tt","icc")
   #filenames_MLM_UNC <- file.path("inst/jags/MLM_UNC.txt")#system.file("jags", "MLM_UNC.txt", package = "eefAnalytics")
+  #filenames_MLM_UNC <- system.file("jags", "MLM_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/MLM_UNC.txt")#file.path("inst/jags/MLM_UNC.txt")#
 
   # model
-  filenames_MLM_UNC <- system.file("jags", "MLM_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/MLM_UNC.txt")#file.path("inst/jags/MLM_UNC.txt")#
+  filenames_MLM_UNC <- file.path(tempdir(), "MLM_UNC.txt")
   cat(paste("
                 model {
                 # Likelihood
@@ -177,13 +178,13 @@ CRT.function <- function(data, formula,random, intervention, nsim,alpha, digits,
                 # Priors
                 beta0 ~ dnorm(0, 0.0001) # Overall intercept
                 tau ~ dgamma(0.001, 0.001) # Precision for within-cluster variation (residual variance)
-                sigma <- 1 / sqrt(tau) # Within-cluster standard deviation (Residual SD)
+                sigma <- 1 / tau # Within-cluster Variance
 
                 tau_u ~ dgamma(0.001, 0.001) # Precision for between-cluster variation
                 sigma_u <- 1 / sqrt(tau_u) # Between-cluster standard deviation
 
                 # Total variance
-                sigma.tt <- sigma_u^2 + sigma^2 # Total variance (between + within variance)
+                sigma.tt <- sigma_u^2 + sigma # Total variance (between + within variance)
                 # ICC calculation
                 icc <- sigma_u^2 / sigma.tt # Intraclass correlation coefficient
 
@@ -246,7 +247,9 @@ CRT.function <- function(data, formula,random, intervention, nsim,alpha, digits,
                    "UNC.ES.Within","UNC.ES.Total","UNC.ProbES.Within","UNC.Prob.Total","UNC.sigma.Within","UNC.sigma.Total","beta","UNC.ICC", "b1")
 
   # 2. COND Jags model -----------
-  filenames_CRT <-system.file("jags", "CRT.txt", package = "eefAnalytics")# file.path("inst/jags/CRT.txt")#file.path("inst/jags/CRT.txt")
+  #filenames_CRT <-system.file("jags", "CRT.txt", package = "eefAnalytics")# file.path("inst/jags/CRT.txt")#file.path("inst/jags/CRT.txt")
+  filenames_CRT <- file.path(tempdir(), "CRT.txt")
+
   cat(paste("
                 model{
                 for(i in 1:N){

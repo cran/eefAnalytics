@@ -2,7 +2,7 @@ Package: eefAnalytics
 Type: Package
 Title: Robust Analytical Methods for Evaluating Educational
         Interventions using Randomised Controlled Trials Designs
-Version: 1.1.4
+Version: 1.1.5
 Authors@R: c(
   person(given = "Germaine", family = "Uwimpuhwe", role = c("aut", "cre"),
          email = "germaine.uwimpuhwe@durham.ac.uk"),
@@ -26,7 +26,7 @@ Imports: R2jags (>= 0.7), ggplot2 (>= 3.4.0), lme4 (>= 1.1.0), methods,
         graphics, stats, mvtnorm (>= 1.1.2), coda (>= 0.19), MCMCvis
         (>= 0.15)
 NeedsCompilation: no
-Packaged: 2024-12-17 15:24:32 UTC; germu
+Packaged: 2025-01-06 15:38:57 UTC; germu
 Author: Germaine Uwimpuhwe [aut, cre],
   Qing Zhang [aut],
   Akansha Singh [aut],
@@ -38,4 +38,4 @@ Author: Germaine Uwimpuhwe [aut, cre],
   Adetayo Kasim [aut]
 Maintainer: Germaine Uwimpuhwe <germaine.uwimpuhwe@durham.ac.uk>
 Repository: CRAN
-Date/Publication: 2024-12-17 16:00:02 UTC
+Date/Publication: 2025-01-09 10:20:02 UTC

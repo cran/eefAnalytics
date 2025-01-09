@@ -147,7 +147,8 @@ MST.function <- function(data, formula, random, intervention, nsim,alpha, digits
   jags.UNCparams <- c("sigma","sigma.tt","icc")
 
   # model
-  filenames_MLM_UNC <- system.file("jags", "MLM_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/MLM_UNC.txt")#file.path("inst/jags/MLM_UNC.txt")#
+  #filenames_MLM_UNC <- system.file("jags", "MLM_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/MLM_UNC.txt")#file.path("inst/jags/MLM_UNC.txt")#
+  filenames_MLM_UNC <- file.path(tempdir(), "MLM_UNC.txt")
   cat(paste("
                 model {
                 # Likelihood
@@ -164,13 +165,13 @@ MST.function <- function(data, formula, random, intervention, nsim,alpha, digits
                 # Priors
                 beta0 ~ dnorm(0, 0.0001) # Overall intercept
                 tau ~ dgamma(0.001, 0.001) # Precision for within-cluster variation (residual variance)
-                sigma <- 1 / sqrt(tau) # Within-cluster standard deviation (Residual SD)
+                sigma <- 1 / tau # Within-cluster variance
 
                 tau_u ~ dgamma(0.001, 0.001) # Precision for between-cluster variation
                 sigma_u <- 1 / sqrt(tau_u) # Between-cluster standard deviation
 
                 # Total variance
-                sigma.tt <- sigma_u^2 + sigma^2 # Total variance (between + within variance)
+                sigma.tt <- sigma_u^2 + sigma # Total variance (between + within variance)
                 # ICC calculation
                 icc <- sigma_u^2 / sigma.tt # Intraclass correlation coefficient
 
@@ -237,8 +238,8 @@ MST.function <- function(data, formula, random, intervention, nsim,alpha, digits
                    "UNC.ES.Within","UNC.ES.Total","UNC.ProbES.Within","UNC.Prob.Total","UNC.sigma.Within","UNC.sigma.Total","UNC.ICC","beta", "b2diff", "b1")
 
   # 2. COND Jags model -----------
-  filenames_MST <- system.file("jags", "MST.txt", package = "eefAnalytics")#file.path("inst/jags/MST.txt")
-
+  #filenames_MST <- system.file("jags", "MST.txt", package = "eefAnalytics")#file.path("inst/jags/MST.txt")
+  filenames_MST <- file.path(tempdir(), "MST.txt")
   cat(paste("
                 model{
                 for(i in 1:N){

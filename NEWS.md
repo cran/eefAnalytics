@@ -1,3 +1,5 @@
-# eefAnalytics 1.1.4
+# eefAnalytics 1.1.5
 
-* Added a `NEWS.md` file to track changes to the package.
+- Fixed an issue in the `srtBayes` function that led to incorrect behavior when used with the `ComparePlot` function.
+- Replaced `rstanarm` with `R2jags` for all Bayesian-related functionality to enhance compatibility with SRS.
+

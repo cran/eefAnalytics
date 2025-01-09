@@ -301,7 +301,8 @@ plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare
     MyData1$Index <- 1:dim(MyData1)[1]
     MyData1$Xaxis <- (max(MyData1$UB.95))+0.05
     Mybreaks <-  round(c(min(MyData1$LB.95),(min(MyData1$LB.95)+(max(MyData1$UB.95)))/2,max(MyData1$UB.95)),2)
-    xlimits <- c(min(min(MyData1$LB.95),0),(max(MyData1$UB.95))+0.4)
+    xlimits <- c(min(min(MyData1$LB.95),0),(max(MyData1$UB.95))+((min(MyData1$LB.95)+(max(MyData1$UB.95)))/4)+0.6)
+
 
     Ann_text <- data.frame(Index = length(MyData1$Variance[MyData1$Variance=="Within"])+0.5,
                            ES = MyData1$Xaxis[1],LB.95=0, UB.95=0,lab = "Text",
@@ -319,7 +320,7 @@ plotObject <- function(analyticObject,group, Conditional,ES_Total,slope, compare
     p <- p + theme(axis.text.y =element_text(color="black"))
     p <- p + theme(text=element_text(size=16, color="black"))
     p <- p + theme(panel.spacing = unit(1, "lines"))
-    p <- p + geom_text(aes(x = Xaxis,y = Name, label = Anot),hjust = 0)
+    p <- p + geom_text(aes(x = Xaxis,y = Name, label = Anot),hjust = 0, nudge_x = 0.04)
     p <- p + geom_text(data = Ann_text, y=Inf,label = "95% CI",hjust = -1.1,vjust = -0.5,size=4,fontface = "bold")
     p <- p + coord_cartesian(clip = "off")
     p <- p + theme(plot.margin = unit(c(30,5,5,5), "point"))

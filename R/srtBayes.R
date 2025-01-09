@@ -123,7 +123,8 @@ OLS.function <- function(data, formula, intervention, nsim,alpha, digits,thresho
   jags.UNCparams <- c("sigma")
 
   # model
-  filenames_OLS_UNC <-  system.file("jags", "OLS_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/OLS_UNC.txt")
+  #filenames_OLS_UNC <-  system.file("jags", "OLS_UNC.txt", package = "eefAnalytics")#file.path("inst/jags/OLS_UNC.txt")
+  filenames_OLS_UNC <- file.path(tempdir(), "OLS_UNC.txt")
   cat(paste("
   model {
     # Likelihood
@@ -135,7 +136,7 @@ OLS.function <- function(data, formula, intervention, nsim,alpha, digits,thresho
     # Priors
     beta0 ~ dnorm(0, 0.0001) # Overall intercept
     tau ~ dgamma(0.001, 0.001) # Precision for within-cluster variation (residual variance)
-    sigma <- 1 / sqrt(tau) # Within-cluster standard deviation (Residual SD)
+    sigma <- 1 / tau # Within-cluster variance
 
   }
 "), file = filenames_OLS_UNC)
@@ -180,7 +181,9 @@ OLS.function <- function(data, formula, intervention, nsim,alpha, digits,thresho
 
 
   # 2. COND Jags model -----------
-  filenames_OLS_CON <- system.file("jags", "SRT.txt", package = "eefAnalytics")#file.path("inst/jags/SRT.txt")
+  #filenames_OLS_CON <- system.file("jags", "SRT.txt", package = "eefAnalytics")#file.path("inst/jags/SRT.txt")
+
+  filenames_OLS_CON <- file.path(tempdir(), "SRT.txt")
   cat(paste("
 
               model{
@@ -280,6 +283,13 @@ OLS.function <- function(data, formula, intervention, nsim,alpha, digits,thresho
     Model=list(jag.ols=jag.ols,jag.ols.upd=jag.ols.upd, jag.ols.sum=jag.ols.sum),
     Unconditional=Unconditional)
 
+
+  #Convert the structure of ES from list to matrix
+  List_matrix <-  function(X){
+    matrix( unlist(X),nrow = nrow(X), byrow = TRUE, dimnames = attr(X, "dimnames"))
+  }
+  ObjectOUT$ES <- List_matrix(X=ObjectOUT$ES)
+  ObjectOUT$Unconditional$ES <- List_matrix(X=ObjectOUT$Unconditional$ES)
 
   return(ObjectOUT)
 
